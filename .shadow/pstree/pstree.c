@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Print
-	Pstree_Print(1,0);
+	Pstree_Print(0,0);
 
 	closedir(dir);
     return 0;
