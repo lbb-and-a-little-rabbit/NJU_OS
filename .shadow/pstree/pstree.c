@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 			showid=true;
 		}
 		if(strcmp(argv[i], "-v")==0 || strcmp(argv[i],"--version")==0){
-			printf("pstree 114515\n");
+			fprintf(stderr,"pstree 114515\n");
 			return 0;
 		}
     }
