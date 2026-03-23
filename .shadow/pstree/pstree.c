@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
         if(strcmp(argv[i],"-p")==0 || strcmp(argv[i], "--show-pids")==0){
 			showid=true;
 		}
-		if(strcmp(argv[i], "-v")==0 || strcmp(argv[i],"--version")==0){
+		if(strcmp(argv[i], "-V")==0 || strcmp(argv[i],"--version")==0){
 			fprintf(stderr,"pstree 114515\n");
 			return 0;
 		}
