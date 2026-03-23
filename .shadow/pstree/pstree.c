@@ -8,8 +8,11 @@
 
 #define PID_MAX 4194304
 
+bool showid=false;
+
 typedef struct Node {
 	pid_t val;
+	char name[32];
 	int sons_cnt;
 	int sons_cap;
 	struct Node **sons;
@@ -19,8 +22,10 @@ Node *nodes[PID_MAX+1];
 bool vis[PID_MAX+1];
 
 void Pstree_Print(pid_t root,int indent){
-	for(int i=0;i<indent;i++) printf(" ");
-	printf("%d\n",(int)root);
+	for(int i=0;i<indent;i++) printf("  ");
+	printf("%s",nodes[root]->name);
+	if(showid) printf("(%d)",(int)root);
+	printf("\n");
 
 	for(int i=0;i<nodes[(int)root]->sons_cnt;i++){
 		Pstree_Print(nodes[(int)root]->sons[i]->val,indent+1);
@@ -28,13 +33,18 @@ void Pstree_Print(pid_t root,int indent){
 }
 
 int main(int argc, char *argv[]) {
-	/*
-    for (int i = 0; i < argc; i++) {
-        assert(argv[i]);
-        printf("argv[%d] = %s\n", i, argv[i]);
+	
+    for (int i = 1; i < argc; i++) {
+        if(strcmp(argv[i],"-p")==0 || strcmp(argv[i], "--show-pids")){
+			showid=true;
+		}
+		if(strcmp(argv[i], "-v")==0 || strcmp(argv[i],"--version")){
+			printf("pstree 114515\n");
+			return 0;
+		}
     }
     assert(!argv[argc]);
-	*/
+	
 
 	//read /proc dirs
     DIR *dir;
@@ -51,7 +61,9 @@ int main(int argc, char *argv[]) {
 		char *DirName=entry->d_name;
 		if(DirName[0]>='0' && DirName[0]<='9'){
 			char path[512];
+			char namepath[512];
 			snprintf(path, sizeof(path), "/proc/%s/status", DirName);
+			snprintf(namepath, sizeof(namepath), "/proc/%s/comm", DirName);
 			pid_t son=(pid_t)atoi(DirName);
 
 			if(!vis[(int)son]){
@@ -61,6 +73,16 @@ int main(int argc, char *argv[]) {
 				nodes[(int)son]->sons_cnt=0;
 				nodes[(int)son]->sons_cap=2;
 				nodes[(int)son]->sons=(Node **)malloc(2*sizeof(Node *));
+
+				FILE *namefp=fopen(namepath,"r");
+				if(!namefp){
+					perror("failed to open file");
+					return 1;
+				}
+				if (fgets(nodes[(int)son]->name, sizeof(nodes[(int)son]->name), namefp)) {
+					nodes[(int)son]->name[strcspn(nodes[(int)son]->name, "\n")] = '\0';
+				}
+				fclose(namefp);
 			}
 
 			char prefix[100];
@@ -82,6 +104,18 @@ int main(int argc, char *argv[]) {
 						nodes[ppid]->sons_cnt=0;
 						nodes[ppid]->sons_cap=2;
 						nodes[ppid]->sons=(Node **)malloc(2*sizeof(Node *));
+
+						char namepath2[512];
+						snprintf(namepath2, sizeof(namepath2), "/proc/%s/comm", DirName);
+						FILE *namefp=fopen(namepath2,"r");
+						if(!namefp){
+							perror("failed to open file");
+							return 1;
+						}
+						if (fgets(nodes[ppid]->name, sizeof(nodes[ppid]->name), namefp)) {
+							nodes[ppid]->name[strcspn(nodes[ppid]->name, "\n")] = '\0';
+						}
+						fclose(namefp);
 					}
 
 					Node *parnode=nodes[ppid];
@@ -99,7 +133,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	//Print
-	Pstree_Print(0,0);
+	Pstree_Print(1,0);
 
 	closedir(dir);
     return 0;
