@@ -29,7 +29,7 @@ int main(int argc,char *argv[]){
 
 	char *cmd = malloc(strlen("./input ") + strlen(args) + 1);
 	sprintf(cmd, "./input %s", args);
-	system("gcc input.cpp -o input");
+	system("gcc input.c -o input");
 	system(cmd);
 	free(cmd);
 	free(args);
