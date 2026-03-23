@@ -1,4 +1,4 @@
-export TOKEN := ???
+export TOKEN := Pa7mw1f
 
 # ----- DO NOT MODIFY -----
 
