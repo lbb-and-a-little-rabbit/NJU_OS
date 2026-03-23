@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 	while((entry=readdir(dir))!=NULL){
 		char *DirName=entry->d_name;
 		if(DirName[0]>='0' && DirName[0]<='9'){
-			char path[256];
+			char path[64];
 			snprintf(path, sizeof(path), "/proc/%s/status", DirName);
 			pid_t son=(pid_t)atoi(DirName);
 
