@@ -35,10 +35,10 @@ void Pstree_Print(pid_t root,int indent){
 int main(int argc, char *argv[]) {
 	
     for (int i = 1; i < argc; i++) {
-        if(strcmp(argv[i],"-p")==0 || strcmp(argv[i], "--show-pids")){
+        if(strcmp(argv[i],"-p")==0 || strcmp(argv[i], "--show-pids")==0){
 			showid=true;
 		}
-		if(strcmp(argv[i], "-v")==0 || strcmp(argv[i],"--version")){
+		if(strcmp(argv[i], "-v")==0 || strcmp(argv[i],"--version")==0){
 			printf("pstree 114515\n");
 			return 0;
 		}
