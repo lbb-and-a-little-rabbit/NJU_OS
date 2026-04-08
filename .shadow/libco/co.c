@@ -64,7 +64,6 @@ void co_destroy(co *co) {
     free(co);
 }
 
-//__attribute__((destructor))
 void __cur_dtor__() {
     co_destroy(cur);
 }
@@ -94,21 +93,19 @@ void co_entry(co *co) {
 }
 
 void co_wait(struct co *co) {
-    if (co->status == CO_DEAD) {
-        for (int i = 0; i < co_cnt; i++) {
-            if (co == co_pool[i]) {
-                co_pool[i] = co_pool[co_cnt - 1];
-                co_cnt--;
-                break;
-            }
-        }
-        co_destroy(co);
-        return;
+    while (co->status != CO_DEAD) {
+        co->waiter = cur;
+        cur->status = CO_WAITING;
+        co_yield();
     }
-
-    co->waiter = cur;
-    cur->status = CO_WAITING;
-    co_yield();
+    
+    for (int i = 0; i < co_cnt; i++) {
+        if (co_pool[i] == co) {
+            co_pool[i] = co_pool[--co_cnt];
+            break;
+        }
+    }
+    co_destroy(co);
 }
 
 void co_yield() {
