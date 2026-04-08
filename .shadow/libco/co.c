@@ -69,6 +69,15 @@ void __cur_dtor__() {
     co_destroy(cur);
 }
 
+__attribute__((destructor))
+void dtor() {
+    for(int i = 0; i < co_cnt; i++) {
+        if (co_pool[i]) {
+            co_destroy(co_pool[i]);
+        }
+    }
+}
+
 struct co *co_start(const char *name, void (*func)(void *), void *arg) {
     co *newco = co_create(name, func, arg);
     co_pool[co_cnt++] = newco;
@@ -80,8 +89,6 @@ void co_entry(co *co) {
     co->status = CO_DEAD;
     if (co->waiter) {
         co->waiter->status = CO_RUNNING;
-        cur = co->waiter;
-        longjmp(co->waiter->context, 1);
     }
     co_yield();
 }
