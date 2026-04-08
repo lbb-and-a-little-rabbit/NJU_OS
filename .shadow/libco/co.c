@@ -85,21 +85,25 @@ void co_entry(co *co) {
 }
 
 void co_wait(struct co *co) {
+    if (co->status == CO_DEAD)
+        return;
+
     co->waiter = cur;
     cur->status = CO_WAITING;
+    co_yield();
 
-    while (co->status != CO_DEAD) {
-        if (co->status == CO_NEW) {
-            co->status = CO_RUNNING;
-            cur = co;
-            stack_switch_call(co->stack + STACK_SIZE, co_entry, (uintptr_t)co);
-        }
-        else if (co->status == CO_RUNNING) {
-            cur = co;
-            longjmp(co->context, 1);
-        }
-    }
-    co_destroy(co);
+    // while (co->status != CO_DEAD) {
+    //     if (co->status == CO_NEW) {
+    //         co->status = CO_RUNNING;
+    //         cur = co;
+    //         stack_switch_call(co->stack + STACK_SIZE, co_entry, (uintptr_t)co);
+    //     }
+    //     else if (co->status == CO_RUNNING) {
+    //         cur = co;
+    //         longjmp(co->context, 1);
+    //     }
+    // }
+    // co_destroy(co);
 }
 
 void co_yield() {
