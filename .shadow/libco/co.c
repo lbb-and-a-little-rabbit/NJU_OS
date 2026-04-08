@@ -57,6 +57,7 @@ co *co_create(const char *name, void (*func)(void *), void *arg) {
 __attribute__((constructor))
 void __cur_init__() {
     cur = co_create("main", NULL, NULL);
+    cur->status = CO_RUNNING;
     co_pool[co_cnt++] = cur;
 }
 
