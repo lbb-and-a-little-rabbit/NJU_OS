@@ -93,7 +93,7 @@ void co_entry(co *co) {
 }
 
 void co_wait(struct co *co) {
-    while (co->status != CO_DEAD) {
+    if (co->status != CO_DEAD) {
         co->waiter = cur;
         cur->status = CO_WAITING;
         co_yield();
