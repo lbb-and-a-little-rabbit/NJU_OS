@@ -64,7 +64,7 @@ void co_destroy(co *co) {
     free(co);
 }
 
-__attribute__((destructor))
+//__attribute__((destructor))
 void __cur_dtor__() {
     co_destroy(cur);
 }
@@ -93,6 +93,7 @@ void co_wait(struct co *co) {
                 break;
             }
         }
+        co_destroy(co);
         return;
     }
 
