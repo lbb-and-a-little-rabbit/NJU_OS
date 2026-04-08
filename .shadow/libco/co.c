@@ -80,6 +80,7 @@ void co_entry(co *co) {
     co->status = CO_DEAD;
     if (co->waiter) {
         co->waiter->status = CO_RUNNING;
+        cur = co->waiter;
         longjmp(co->waiter->context, 1);
     }
     co_yield();
