@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define STACK_SIZE 1024
-#define MAX_SIZE 100
+#define STACK_SIZE 1024*64
+#define MAX_SIZE 130
 
 typedef enum co_status {
     CO_NEW = 1, // 新创建，还未执行过
