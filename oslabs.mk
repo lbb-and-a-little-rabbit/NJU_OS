@@ -1,9 +1,9 @@
-export TOKEN := ???
+export TOKEN := Pa7mw1f
 
 # ----- DO NOT MODIFY -----
 
-export COURSE := OS2025
-URL := 'http://10.48.6.70:5000/download/submit.sh'
+export COURSE := OS2026
+URL := 'http://iseoj.nju.edu.cn/download/submit.sh'
 
 submit:
 	@cd $(dir $(abspath $(lastword $(MAKEFILE_LIST)))) && \
