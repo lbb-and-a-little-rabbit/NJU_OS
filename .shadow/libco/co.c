@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define STACK_SIZE 1024*64
+#define STACK_SIZE 1024 * 64
 #define MAX_SIZE 130
 
 typedef enum co_status {
@@ -80,6 +80,7 @@ void co_entry(co *co) {
     co->status = CO_DEAD;
     if (co->waiter) {
         co->waiter->status = CO_RUNNING;
+        longjmp(co->waiter->context, 1);
     }
     co_yield();
 }
