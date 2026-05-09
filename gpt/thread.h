@@ -45,7 +45,7 @@ void create(void *fn) {
     threads_[n_] = (struct thread) {
         .id = n_ + 1,
         .status = T_LIVE,
-        .entry = fn,
+        .entry = (void (*)(int))fn,
     };
     pthread_create(
         &(threads_[n_].thread),  // a pthread_t
