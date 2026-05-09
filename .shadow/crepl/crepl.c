@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 
+char tmp_file_path[] = "tmp/tempfilexxxx";
+char s_int[] = "int";
+
 int main(int argc, char *argv[]) {
     static char line[4096];
 
@@ -13,6 +16,14 @@ int main(int argc, char *argv[]) {
         }
 
         // To be implemented.
-        printf("Got %zu chars.\n", strlen(line));
+        if (!strncmp(line, s_int, strlen(s_int))) {
+
+            printf("OK.\n");
+        }
+        else {
+            printf("= ");
+
+            printf("\n");
+        }
     }
 }
