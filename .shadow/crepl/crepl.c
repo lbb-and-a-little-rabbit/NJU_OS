@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
         // To be implemented.
         if (!strncmp(line, s_int, strlen(s_int))) {
-            char tmp_file_path[] = "/tmp/tempfilexxxxxx";
+            char tmp_file_path[] = "/tmp/tempfileXXXXXX";
             int fd = mkstemp(tmp_file_path);
             FILE *fp = fopen(tmp_file_path, "w");
             fprintf(fp, "%s\n", line);
