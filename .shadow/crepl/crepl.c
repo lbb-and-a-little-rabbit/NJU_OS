@@ -125,18 +125,18 @@ int main(int argc, char *argv[], char *envp[]) {
             char *error;
             handle = dlopen(out_file_path, RTLD_NOW);
             if (!handle) {
-                    //fprintf(stderr, "%s\n", dlerror());
+                    fprintf(stderr, "%s\n", dlerror());
                     return 1;
             }
             dlerror();
             *(void **) (&foo) = dlsym(handle, wrapper);
-                if ((error = dlerror()) != NULL)  {
-                    fprintf(stderr, "%s\n", error);
-                    dlclose(handle);
-                    return 1;
-                }
-                int res = foo();
+            if ((error = dlerror()) != NULL)  {
+                //fprintf(stderr, "%s\n", error);
                 dlclose(handle);
+                return 1;
+            }
+            int res = foo();
+            dlclose(handle);
 
             printf("= %d", res);
             printf("\n");
