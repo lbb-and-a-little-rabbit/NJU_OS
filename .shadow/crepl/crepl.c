@@ -39,6 +39,7 @@ void so_create(char *input_path, char *output_path) {
 # endif
         char *env[] = {NULL};
         execve("gcc", args, env);
+        perror("execvp");
         _exit(-1);
     } 
     else {
@@ -59,10 +60,11 @@ int main(int argc, char *argv[]) {
 
         // To be implemented.
         if (!strncmp(line, s_int, strlen(s_int))) {
-            char tmp_file_path[] = "./fuck/tempfileXXXXXX";
-            //int fd = mkstemp(tmp_file_path);
+            char tmp_file_path[] = "/tmp/tempfileXXXXXX";
+            int fd = mkstemp(tmp_file_path);
             FILE *fp = fopen(tmp_file_path, "w");
             fprintf(fp, "%s\n", line);
+            fclose(fp);
             char out_file_path[100];
             strcpy(out_file_path, tmp_file_path);
             strcat(out_file_path, ".so");
