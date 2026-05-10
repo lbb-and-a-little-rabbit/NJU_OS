@@ -125,7 +125,7 @@ int main(int argc, char *argv[], char *envp[]) {
             char *error;
             handle = dlopen(out_file_path, RTLD_NOW);
             if (!handle) {
-                    fprintf(stderr, "%s\n", dlerror());
+                    //fprintf(stderr, "%s\n", dlerror());
                     return 1;
             }
             dlerror();
