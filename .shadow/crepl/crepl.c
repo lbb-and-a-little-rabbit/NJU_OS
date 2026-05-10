@@ -70,7 +70,6 @@ int main(int argc, char *argv[], char *envp[]) {
             break;
         }
 
-        // To be implemented.
         if (!strncmp(line, s_int, strlen(s_int))) {
             char tmp_file_path[] = "/tmp/tempfileXXXXXX";
             int fd = mkstemp(tmp_file_path);
@@ -84,8 +83,6 @@ int main(int argc, char *argv[], char *envp[]) {
             char *error;
             handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
             if (!handle) {
-                    //fprintf(stderr, "%s\n", dlerror());
-                    //return 1;
                     continue;
             }
             dlerror();
