@@ -84,7 +84,7 @@ int main(int argc, char *argv[], char *envp[]) {
             FILE *fp = fopen(tmp_file_path, "w");
             char wrapper[5096];
             char fucn_name[100];
-            snprintf(fucn_name, sizeof(fucn_name), "wrapper__%d", eval_cnt);
+            snprintf(fucn_name, sizeof(fucn_name), "__wrapper__%d", eval_cnt);
             snprintf(wrapper, sizeof(wrapper), "int __wrapper__%d() { return %s; }", eval_cnt, line);
             fprintf(fp, "%s\n", wrapper);
             fclose(fp);
