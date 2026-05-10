@@ -93,36 +93,6 @@ int main(int argc, char *argv[], char *envp[]) {
             strcpy(out_file_path, tmp_file_path);
             strcat(out_file_path, ".so");
             so_create(tmp_file_path, out_file_path, envp);
-            /*
-                void *handle;
-                void (*foo)(void);  // 假设foo是一个无参数且返回void的函数
-                char *error;
-
-                // 打开共享库
-                handle = dlopen("libfoo.so", RTLD_LAZY);
-                if (!handle) {
-                    fprintf(stderr, "%s\n", dlerror());
-                    return 1;
-                }
-
-                // 清除现有的错误
-                dlerror();
-
-                // 获取foo函数的地址
-                *(void **) (&foo) = dlsym(handle, "foo");
-                if ((error = dlerror()) != NULL)  {
-                    fprintf(stderr, "%s\n", error);
-                    dlclose(handle);
-                    return 1;
-                }
-
-                // 调用函数
-                foo();
-
-                // 关闭共享库
-                dlclose(handle);
-                return 0;
-            */
             void *handle;
             int (*foo)(void);
             char *error;
