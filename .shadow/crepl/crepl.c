@@ -6,7 +6,7 @@
 
 char s_int[] = "int";
 
-void so_create(char *input_path, char *output_path) {
+void so_create(char *input_path, char *output_path, char *envp[]) {
     pid_t pid = fork();
     if (pid < 0) {
         return;
@@ -43,22 +43,22 @@ void so_create(char *input_path, char *output_path) {
         };
 
 # endif
-        char *env[] = {NULL};
-        // execve("/usr/bin/gcc", args, env);
-        execl(
-            "/usr/bin/gcc",
-            "gcc",
-            "-fPIC",
-            "-shared",
-            "-m64",
-            "-fno-use-linker-plugin",
-            "-x",
-            "c",
-            input_path,
-            "-o",
-            output_path,
-            NULL
-        );
+        //char *env[] = {NULL};
+        execve("/usr/bin/gcc", args, envp);
+        // execl(
+        //     "/usr/bin/gcc",
+        //     "gcc",
+        //     "-fPIC",
+        //     "-shared",
+        //     "-m64",
+        //     "-fno-use-linker-plugin",
+        //     "-x",
+        //     "c",
+        //     input_path,
+        //     "-o",
+        //     output_path,
+        //     NULL
+        // );
         perror("execvp");
         _exit(-1);
     } 
@@ -67,7 +67,7 @@ void so_create(char *input_path, char *output_path) {
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[], char *envp[]) {
     static char line[4096];
 
     while (1) {
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
             char out_file_path[100];
             strcpy(out_file_path, tmp_file_path);
             strcat(out_file_path, ".so");
-            so_create(tmp_file_path, out_file_path);
+            so_create(tmp_file_path, out_file_path, envp);
             printf("OK.\n");
         }
         else {
