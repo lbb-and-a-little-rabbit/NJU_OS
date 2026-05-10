@@ -38,7 +38,7 @@ void so_create(char *input_path, char *output_path) {
 
 # endif
         char *env[] = {NULL};
-        execve("gcc", args, env);
+        execve("/usr/bin/gcc", args, env);
         perror("execvp");
         _exit(-1);
     } 
