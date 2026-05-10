@@ -12,7 +12,7 @@ void *handle;
 int so_create(char *input_path, char *output_path, char *envp[]) {
     pid_t pid = fork();
     if (pid < 0) {
-        return;
+        return 0;
     }
     else if (pid == 0) {
 #if __x86_64__
