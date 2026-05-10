@@ -83,7 +83,7 @@ int main(int argc, char *argv[], char *envp[]) {
             int fd = mkstemp(tmp_file_path);
             FILE *fp = fopen(tmp_file_path, "w");
             char wrapper[5096];
-            snprintf(wrapper, sizeof(wrapper), "int __wrapper__%d () { return %s; }", eval_cnt, line);
+            snprintf(wrapper, sizeof(wrapper), "int __wrapper__%d() { return %s; }", eval_cnt, line);
             fprintf(fp, "%s\n", wrapper);
             fclose(fp);
             char out_file_path[100];
