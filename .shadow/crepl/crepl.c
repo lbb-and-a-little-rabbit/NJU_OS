@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
         // To be implemented.
         if (!strncmp(line, s_int, strlen(s_int))) {
             char tmp_file_path[] = "./fuck/tempfileXXXXXX";
-            int fd = mkstemp(tmp_file_path);
+            //int fd = mkstemp(tmp_file_path);
             FILE *fp = fopen(tmp_file_path, "w");
             fprintf(fp, "%s\n", line);
             char out_file_path[100];
