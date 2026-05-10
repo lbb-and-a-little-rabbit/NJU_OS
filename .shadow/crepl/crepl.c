@@ -123,7 +123,7 @@ int main(int argc, char *argv[], char *envp[]) {
             void *handle;
             int (*foo)(void);
             char *error;
-            handle = dlopen(out_file_path, RTLD_LAZY);
+            handle = dlopen(out_file_path, RTLD_NOW);
             if (!handle) {
                     fprintf(stderr, "%s\n", dlerror());
                     return 1;
