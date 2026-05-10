@@ -83,6 +83,8 @@ int main(int argc, char *argv[], char *envp[]) {
             int fd = mkstemp(tmp_file_path);
             FILE *fp = fopen(tmp_file_path, "w");
             char wrapper[5096];
+            char fucn_name[100];
+            snprintf(fucn_name, sizeof(fucn_name), "wrapper__%d", eval_cnt);
             snprintf(wrapper, sizeof(wrapper), "int __wrapper__%d() { return %s; }", eval_cnt, line);
             fprintf(fp, "%s\n", wrapper);
             fclose(fp);
@@ -129,9 +131,9 @@ int main(int argc, char *argv[], char *envp[]) {
                     return 1;
             }
             dlerror();
-            *(void **) (&foo) = dlsym(handle, wrapper);
+            *(void **) (&foo) = dlsym(handle, fucn_name);
             if ((error = dlerror()) != NULL)  {
-                //fprintf(stderr, "%s\n", error);
+                fprintf(stderr, "%s\n", error);
                 dlclose(handle);
                 return 1;
             }
