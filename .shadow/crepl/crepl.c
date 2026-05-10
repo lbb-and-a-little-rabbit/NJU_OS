@@ -82,8 +82,9 @@ int main(int argc, char *argv[], char *envp[]) {
             char *error;
             handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
             if (!handle) {
-                    fprintf(stderr, "%s\n", dlerror());
-                    return 1;
+                    //fprintf(stderr, "%s\n", dlerror());
+                    //return 1;
+                    continue;
             }
             dlerror();
             printf("OK.\n");
@@ -106,15 +107,12 @@ int main(int argc, char *argv[], char *envp[]) {
             char *error;
             handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
             if (!handle) {
-                    fprintf(stderr, "%s\n", dlerror());
-                    return 1;
+                continue;
             }
             dlerror();
             *(void **) (&foo) = dlsym(handle, fucn_name);
             if ((error = dlerror()) != NULL)  {
-                fprintf(stderr, "%s\n", error);
-                dlclose(handle);
-                return 1;
+                continue;
             }
             int res = foo();
 
