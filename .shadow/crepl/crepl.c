@@ -9,7 +9,7 @@ char s_int[] = "int";
 int eval_cnt = 0;
 void *handle;
 
-void so_create(char *input_path, char *output_path, char *envp[]) {
+int so_create(char *input_path, char *output_path, char *envp[]) {
     pid_t pid = fork();
     if (pid < 0) {
         return;
@@ -53,7 +53,9 @@ void so_create(char *input_path, char *output_path, char *envp[]) {
         _exit(-1);
     } 
     else {
-        waitpid(pid, NULL, 0);
+        int status;
+        waitpid(pid, &status, 0);
+        return WIFEXITED(status) && WEXITSTATUS(status) == 0;       
     }
 }
 
@@ -78,7 +80,7 @@ int main(int argc, char *argv[], char *envp[]) {
             char out_file_path[100];
             strcpy(out_file_path, tmp_file_path);
             strcat(out_file_path, ".so");
-            so_create(tmp_file_path, out_file_path, envp);
+            if (!so_create(tmp_file_path, out_file_path, envp)) continue;
             char *error;
             handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
             if (!handle) {
@@ -102,7 +104,7 @@ int main(int argc, char *argv[], char *envp[]) {
             char out_file_path[100];
             strcpy(out_file_path, tmp_file_path);
             strcat(out_file_path, ".so");
-            so_create(tmp_file_path, out_file_path, envp);
+            if (!so_create(tmp_file_path, out_file_path, envp)) continue;
             int (*foo)(void);
             char *error;
             handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
