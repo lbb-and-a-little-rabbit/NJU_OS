@@ -1,7 +1,65 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <dlfcn.h>
 
-int main(int argc, char *argv[]) {
+char s_int[] = "int";
+int eval_cnt = 0;
+void *handle;
+
+int so_create(char *input_path, char *output_path, char *envp[]) {
+    pid_t pid = fork();
+    if (pid < 0) {
+        return 0;
+    }
+    else if (pid == 0) {
+#if __x86_64__
+        char *args[] = {
+            "gcc",
+            "-fPIC",
+            "-shared",
+            "-m64",
+            "-Wno-implicit-function-declaration",
+            "-Wl,-export-dynamic",
+            "-x",
+            "c",
+            input_path,
+            "-o",
+            output_path,
+            NULL
+        };
+    
+#else
+        char *args[] = {
+            "gcc",
+            "-fPIC",
+            "-shared",
+            "-m32",
+            "-Wl,-export-dynamic",
+            "-Wno-implicit-function-declaration",
+            "-x",
+            "c",
+            input_path,
+            "-o",
+            output_path,
+            NULL
+        };
+
+# endif
+        execve("/usr/bin/gcc", args, envp);
+        perror("execvp");
+        _exit(-1);
+    } 
+    else {
+        int status;
+        waitpid(pid, &status, 0);
+        return WIFEXITED(status) && WEXITSTATUS(status) == 0;       
+    }
+}
+
+int main(int argc, char *argv[], char *envp[]) {
     static char line[4096];
 
     while (1) {
@@ -12,7 +70,54 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        // To be implemented.
-        printf("Got %zu chars.\n", strlen(line));
+        if (!strncmp(line, s_int, strlen(s_int))) {
+            char tmp_file_path[] = "/tmp/tempfileXXXXXX";
+            int fd = mkstemp(tmp_file_path);
+            FILE *fp = fopen(tmp_file_path, "w");
+            fprintf(fp, "%s\n", line);
+            fclose(fp);
+            char out_file_path[100];
+            strcpy(out_file_path, tmp_file_path);
+            strcat(out_file_path, ".so");
+            if (!so_create(tmp_file_path, out_file_path, envp)) continue;
+            char *error;
+            handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
+            if (!handle) {
+                    continue;
+            }
+            dlerror();
+            printf("OK.\n");
+        }
+        else {
+            char tmp_file_path[] = "/tmp/tempfileXXXXXX";
+            int fd = mkstemp(tmp_file_path);
+            FILE *fp = fopen(tmp_file_path, "w");
+            char wrapper[5096];
+            char fucn_name[100];
+            snprintf(fucn_name, sizeof(fucn_name), "__wrapper__%d", eval_cnt);
+            snprintf(wrapper, sizeof(wrapper), "int __wrapper__%d() { return %s; }", eval_cnt, line);
+            fprintf(fp, "%s\n", wrapper);
+            fclose(fp);
+            char out_file_path[100];
+            strcpy(out_file_path, tmp_file_path);
+            strcat(out_file_path, ".so");
+            if (!so_create(tmp_file_path, out_file_path, envp)) continue;
+            int (*foo)(void);
+            char *error;
+            handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
+            if (!handle) {
+                continue;
+            }
+            dlerror();
+            *(void **) (&foo) = dlsym(handle, fucn_name);
+            if ((error = dlerror()) != NULL)  {
+                continue;
+            }
+            int res = foo();
+
+            printf("= %d", res);
+            printf("\n");
+            eval_cnt++;
+        }
     }
 }
