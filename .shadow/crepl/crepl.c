@@ -21,6 +21,7 @@ void so_create(char *input_path, char *output_path, char *envp[]) {
             "-shared",
             "-m64",
             "-Wno-implicit-function-declaration",
+            "-Wl,-export-dynamic",
             "-x",
             "c",
             input_path,
@@ -35,7 +36,7 @@ void so_create(char *input_path, char *output_path, char *envp[]) {
             "-fPIC",
             "-shared",
             "-m32",
-     
+            "-Wl,-export-dynamic",
             "-Wno-implicit-function-declaration",
             "-x",
             "c",
