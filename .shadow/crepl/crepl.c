@@ -79,6 +79,13 @@ int main(int argc, char *argv[], char *envp[]) {
             strcpy(out_file_path, tmp_file_path);
             strcat(out_file_path, ".so");
             so_create(tmp_file_path, out_file_path, envp);
+            char *error;
+            handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
+            if (!handle) {
+                    fprintf(stderr, "%s\n", dlerror());
+                    return 1;
+            }
+            dlerror();
             printf("OK.\n");
         }
         else {
@@ -103,7 +110,7 @@ int main(int argc, char *argv[], char *envp[]) {
                     return 1;
             }
             dlerror();
-            *(int **) (&foo) = dlsym(handle, fucn_name);
+            *(void **) (&foo) = dlsym(handle, fucn_name);
             if ((error = dlerror()) != NULL)  {
                 fprintf(stderr, "%s\n", error);
                 dlclose(handle);
