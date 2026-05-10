@@ -20,7 +20,7 @@ void so_create(char *input_path, char *output_path, char *envp[]) {
             "-fPIC",
             "-shared",
             "-m64",
-            "-fno-use-linker-plugin",
+            "-Wno-implicit-function-declaration",
             "-x",
             "c",
             input_path,
@@ -35,7 +35,8 @@ void so_create(char *input_path, char *output_path, char *envp[]) {
             "-fPIC",
             "-shared",
             "-m32",
-            "-fno-use-linker-plugin",
+     
+            "-Wno-implicit-function-declaration",
             "-x",
             "c",
             input_path,
