@@ -103,7 +103,7 @@ int main(int argc, char *argv[], char *envp[]) {
                     return 1;
             }
             dlerror();
-            *(void **) (&foo) = dlsym(handle, fucn_name);
+            *(int **) (&foo) = dlsym(handle, fucn_name);
             if ((error = dlerror()) != NULL)  {
                 fprintf(stderr, "%s\n", error);
                 dlclose(handle);
