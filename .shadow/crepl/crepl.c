@@ -44,7 +44,21 @@ void so_create(char *input_path, char *output_path) {
 
 # endif
         char *env[] = {NULL};
-        execve("/usr/bin/gcc", args, env);
+        // execve("/usr/bin/gcc", args, env);
+        execl(
+            "/usr/bin/gcc",
+            "gcc",
+            "-fPIC",
+            "-shared",
+            "-m64",
+            "-fno-use-linker-plugin",
+            "-x",
+            "c",
+            input_path,
+            "-o",
+            output_path,
+            NULL
+        );
         perror("execvp");
         _exit(-1);
     } 
