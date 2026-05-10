@@ -3,8 +3,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <dlfcn.h>
 
 char s_int[] = "int";
+int eval_cnt = 0;
 
 void so_create(char *input_path, char *output_path, char *envp[]) {
     pid_t pid = fork();
@@ -43,22 +45,7 @@ void so_create(char *input_path, char *output_path, char *envp[]) {
         };
 
 # endif
-        //char *env[] = {NULL};
         execve("/usr/bin/gcc", args, envp);
-        // execl(
-        //     "/usr/bin/gcc",
-        //     "gcc",
-        //     "-fPIC",
-        //     "-shared",
-        //     "-m64",
-        //     "-fno-use-linker-plugin",
-        //     "-x",
-        //     "c",
-        //     input_path,
-        //     "-o",
-        //     output_path,
-        //     NULL
-        // );
         perror("execvp");
         _exit(-1);
     } 
@@ -92,9 +79,68 @@ int main(int argc, char *argv[], char *envp[]) {
             printf("OK.\n");
         }
         else {
-            printf("= ");
+            char tmp_file_path[] = "/tmp/tempfileXXXXXX";
+            int fd = mkstemp(tmp_file_path);
+            FILE *fp = fopen(tmp_file_path, "w");
+            char wrapper[5096];
+            snprintf(wrapper, sizeof(wrapper), "int __wrapper__%d () { return %s; }", eval_cnt, line);
+            fprintf(fp, "%s\n", wrapper);
+            fclose(fp);
+            char out_file_path[100];
+            strcpy(out_file_path, tmp_file_path);
+            strcat(out_file_path, ".so");
+            so_create(tmp_file_path, out_file_path, envp);
+            /*
+                void *handle;
+                void (*foo)(void);  // 假设foo是一个无参数且返回void的函数
+                char *error;
 
+                // 打开共享库
+                handle = dlopen("libfoo.so", RTLD_LAZY);
+                if (!handle) {
+                    fprintf(stderr, "%s\n", dlerror());
+                    return 1;
+                }
+
+                // 清除现有的错误
+                dlerror();
+
+                // 获取foo函数的地址
+                *(void **) (&foo) = dlsym(handle, "foo");
+                if ((error = dlerror()) != NULL)  {
+                    fprintf(stderr, "%s\n", error);
+                    dlclose(handle);
+                    return 1;
+                }
+
+                // 调用函数
+                foo();
+
+                // 关闭共享库
+                dlclose(handle);
+                return 0;
+            */
+            void *handle;
+            int (*foo)(void);
+            char *error;
+            handle = dlopen(out_file_path, RTLD_LAZY);
+            if (!handle) {
+                    fprintf(stderr, "%s\n", dlerror());
+                    return 1;
+            }
+            dlerror();
+            *(void **) (&foo) = dlsym(handle, wrapper);
+                if ((error = dlerror()) != NULL)  {
+                    fprintf(stderr, "%s\n", error);
+                    dlclose(handle);
+                    return 1;
+                }
+                int res = foo();
+                dlclose(handle);
+
+            printf("= %d", res);
             printf("\n");
+            eval_cnt++;
         }
     }
 }
