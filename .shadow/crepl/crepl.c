@@ -126,7 +126,7 @@ int main(int argc, char *argv[], char *envp[]) {
             void *handle;
             int (*foo)(void);
             char *error;
-            handle = dlopen(out_file_path, RTLD_NOW);
+            handle = dlopen(out_file_path, RTLD_NOW|RTLD_GLOBAL);
             if (!handle) {
                     fprintf(stderr, "%s\n", dlerror());
                     return 1;
