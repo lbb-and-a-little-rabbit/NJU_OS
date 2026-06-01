@@ -7,8 +7,8 @@
 #include <regex.h>
 
 typedef struct syscall_status {
-    
-}
+
+};
 
 int main(int argc, char *argv[]) {
     int pipefd[2];
