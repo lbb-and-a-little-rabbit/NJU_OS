@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
             ssize_t n = read(pipefd[0], buf, sizeof(buf) - 1);
             if (n <= 0) break;
             buf[n] = '\0';
-            
+            printf("%s", buf);
         }
 
         int status;
