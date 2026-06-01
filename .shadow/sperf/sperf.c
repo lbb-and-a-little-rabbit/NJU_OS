@@ -14,7 +14,7 @@ typedef struct syscall_status {
 } SS;
 
 int cmp(const void * a, const void * b) {
-    return ((SS *)a)->time >= ((SS *)b)->time ? 1 : -1;
+    return ((SS *)a)->time <= ((SS *)b)->time ? 1 : -1;
 }
 
 long long now_ms(void) {
@@ -136,8 +136,10 @@ int main(int argc, char *argv[]) {
                 for (int i = 0; i < 5; i++) {
                     int ratio = (int)(syslist[i].time * 100.0 / totaltime + 0.5);
                     printf("%s (%d%%)\n", syslist[i].name, ratio);
-                    fflush(stdout);
                 }
+                char zeros[80] = {0};
+                fwrite(zeros, 1, 80, stdout);
+                fflush(stdout);
                 lastime = curtime;
             }
         }
@@ -151,6 +153,9 @@ int main(int argc, char *argv[]) {
             int ratio = (int)(syslist[i].time * 100.0 / totaltime + 0.5);
             printf("%s (%d%%)\n", syslist[i].name, ratio);
         }
+        char zeros[80] = {0};
+        fwrite(zeros, 1, 80, stdout);
+        fflush(stdout);
 
         int status;
         waitpid(pid, &status, 0);
