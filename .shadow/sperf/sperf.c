@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <regex.h>
 
 int main(int argc, char *argv[]) {
     int pipefd[2];
@@ -43,7 +44,7 @@ int main(int argc, char *argv[]) {
             ssize_t n = read(pipefd[0], buf, sizeof(buf) - 1);
             if (n <= 0) break;
             buf[n] = '\0';
-            printf("%s\n", buf);
+            printf("%s 114514\n", buf);
         }
 
         int status;
