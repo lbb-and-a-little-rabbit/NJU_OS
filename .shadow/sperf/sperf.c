@@ -5,10 +5,23 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <regex.h>
+#include <time.h>
+#include <string.h>
 
 typedef struct syscall_status {
-    int a;
-} a;
+    double time;
+    char name[32];
+} SS;
+
+int cmp(const void * a, const void * b) {
+    return ((SS *)a)->time >= ((SS *)b)->time ? 1 : -1;
+}
+
+long long now_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
 
 int main(int argc, char *argv[]) {
     int pipefd[2];
@@ -45,343 +58,108 @@ int main(int argc, char *argv[]) {
         close(pipefd[1]);
         regex_t reg;
         const char *pattern = "^([a-z][a-z0-9_]*)\\(.*<([0-9]+\\.[0-9]+)>";
+        if (regcomp(&reg, pattern, REG_EXTENDED) != 0) {
+            fprintf(stderr, "regcomp failed\n");
+            return 1;
+        }
         char buf[4096];
+        char line[8192];
+        int line_len = 0;
+        SS syslist[500];
+        int syscnt = 0;
+
+        long long lastime = now_ms();
         while (1) {
             ssize_t n = read(pipefd[0], buf, sizeof(buf) - 1);
             if (n <= 0) break;
-            buf[n] = '\0';
-            printf("%s", buf);
+            for (ssize_t i = 0; i < n; i++) {
+                if (buf[i] == '\n') {
+                    /*
+                        到这里，line 才是一整行 strace 输出
+                    */
+                    line[line_len] = '\0';
+
+                    regmatch_t match[3];
+
+                    if (regexec(&reg, line, 3, match, 0) == 0) {
+                        char syscall_name[32];
+                        char time_str[64];
+
+                        int name_len = match[1].rm_eo - match[1].rm_so;
+                        if (name_len >= (int)sizeof(syscall_name)) {
+                            name_len = sizeof(syscall_name) - 1;
+                        }
+
+                        strncpy(syscall_name, line + match[1].rm_so, name_len);
+                        syscall_name[name_len] = '\0';
+
+                        int time_len = match[2].rm_eo - match[2].rm_so;
+                        if (time_len >= (int)sizeof(time_str)) {
+                            time_len = sizeof(time_str) - 1;
+                        }
+
+                        strncpy(time_str, line + match[2].rm_so, time_len);
+                        time_str[time_len] = '\0';
+
+                        double t = atof(time_str);
+
+                        int found = -1;
+
+                        for (int j = 0; j < syscnt; j++) {
+                            if (strcmp(syslist[j].name, syscall_name) == 0) {
+                                found = j;
+                                break;
+                            }
+                        }
+
+                        if (found != -1) {
+                            syslist[found].time += t;
+                        } 
+                        else {
+                            strncpy(syslist[syscnt].name, syscall_name, sizeof(syslist[syscnt].name) - 1);
+                            syslist[syscnt].name[sizeof(syslist[syscnt].name) - 1] = '\0';
+                            syslist[syscnt].time = t;
+                            syscnt++;  
+                        }
+                    }
+                    line_len = 0;
+                } 
+                else {
+                    line[line_len++] = buf[i];
+                }
+            }
+
+            long long curtime = now_ms();
+            if (curtime - lastime >= 100) {
+                qsort(syslist, syscnt, sizeof(syslist), cmp);
+                double totaltime = 0;
+                for (int i = 0; i < syscnt; i++) {
+                    totaltime += syslist[i].time;
+                }
+                for (int i = 0; i < 5; i++) {
+                    int ratio = (int)(syslist[i].time * 100.0 / totaltime + 0.5);
+                    printf("%s (%d%%)\n", syslist[i].name, ratio);
+                    fflush(stdout);
+                }
+                lastime = curtime;
+            }
+        }
+
+        qsort(syslist, syscnt, sizeof(syslist), cmp);
+        double totaltime = 0;
+        for (int i = 0; i < syscnt; i++) {
+            totaltime += syslist[i].time;
+        }
+        for (int i = 0; i < 5; i++) {
+            int ratio = (int)(syslist[i].time * 100.0 / totaltime + 0.5);
+            printf("%s (%d%%)\n", syslist[i].name, ratio);
         }
 
         int status;
         waitpid(pid, &status, 0);
+
+
     }
 
     return 0;
 }
-
-
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <assert.h>
-// #include <sys/types.h>
-// #include <sys/wait.h>
-// #include <unistd.h>
-// #include <regex.h>
-// #include <string.h>
-// #include <time.h>
-// #include <errno.h>
-
-// #define MAX_SYSCALLS 512
-// #define MAX_NAME_LEN 128
-// #define LINE_BUF_SIZE 65536
-
-// typedef struct {
-//     char name[MAX_NAME_LEN];
-//     double time;
-// } SyscallStat;
-
-// static long long now_ms(void) {
-//     struct timespec ts;
-//     clock_gettime(CLOCK_MONOTONIC, &ts);
-//     return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
-// }
-
-// static void copy_match(char *dst, size_t dst_size, const char *src, regmatch_t m) {
-//     if (dst_size == 0) return;
-
-//     if (m.rm_so == -1 || m.rm_eo == -1) {
-//         dst[0] = '\0';
-//         return;
-//     }
-
-//     size_t len = (size_t)(m.rm_eo - m.rm_so);
-
-//     if (len >= dst_size) {
-//         len = dst_size - 1;
-//     }
-
-//     memcpy(dst, src + m.rm_so, len);
-//     dst[len] = '\0';
-// }
-
-// static int parse_strace_line(regex_t *reg, const char *line,
-//                              char *syscall_name, size_t name_size,
-//                              double *time_out) {
-//     regmatch_t matches[3];
-
-//     int ret = regexec(reg, line, 3, matches, 0);
-//     if (ret != 0) {
-//         return 0;
-//     }
-
-//     char time_str[128];
-
-//     copy_match(syscall_name, name_size, line, matches[1]);
-//     copy_match(time_str, sizeof(time_str), line, matches[2]);
-
-//     char *endptr = NULL;
-//     double t = strtod(time_str, &endptr);
-
-//     if (endptr == time_str) {
-//         return 0;
-//     }
-
-//     *time_out = t;
-//     return 1;
-// }
-
-// static int find_syscall(SyscallStat stats[], int count, const char *name) {
-//     for (int i = 0; i < count; i++) {
-//         if (strcmp(stats[i].name, name) == 0) {
-//             return i;
-//         }
-//     }
-
-//     return -1;
-// }
-
-// static void add_syscall_time(SyscallStat stats[], int *count,
-//                              const char *name, double t) {
-//     int idx = find_syscall(stats, *count, name);
-
-//     if (idx >= 0) {
-//         stats[idx].time += t;
-//         return;
-//     }
-
-//     if (*count >= MAX_SYSCALLS) {
-//         return;
-//     }
-
-//     strncpy(stats[*count].name, name, MAX_NAME_LEN - 1);
-//     stats[*count].name[MAX_NAME_LEN - 1] = '\0';
-//     stats[*count].time = t;
-//     (*count)++;
-// }
-
-// static void print_top5(SyscallStat stats[], int count) {
-//     double total = 0.0;
-
-//     for (int i = 0; i < count; i++) {
-//         total += stats[i].time;
-//     }
-
-//     if (total <= 0.0) {
-//         return;
-//     }
-
-//     int used[MAX_SYSCALLS] = {0};
-
-//     for (int k = 0; k < 5; k++) {
-//         int best = -1;
-
-//         for (int i = 0; i < count; i++) {
-//             if (used[i]) {
-//                 continue;
-//             }
-
-//             if (best == -1 || stats[i].time > stats[best].time) {
-//                 best = i;
-//             }
-//         }
-
-//         if (best == -1) {
-//             break;
-//         }
-
-//         used[best] = 1;
-
-//         int ratio = (int)(stats[best].time * 100.0 / total + 0.5);
-
-//         printf("%s (%d%%)\n", stats[best].name, ratio);
-//     }
-
-//     /*
-//         题目要求：
-//         每次统计信息输出完毕后，打印 80 个 '\0'
-//     */
-//     char zeros[80] = {0};
-//     fwrite(zeros, 1, sizeof(zeros), stdout);
-//     fflush(stdout);
-// }
-
-// static void process_line(regex_t *reg, const char *line,
-//                          SyscallStat stats[], int *count,
-//                          int *dirty) {
-//     char syscall_name[MAX_NAME_LEN];
-//     double t;
-
-//     if (parse_strace_line(reg, line, syscall_name, sizeof(syscall_name), &t)) {
-//         add_syscall_time(stats, count, syscall_name, t);
-//         *dirty = 1;
-//     }
-// }
-
-// int main(int argc, char *argv[]) {
-//     if (argc < 2) {
-//         fprintf(stderr, "Usage: %s COMMAND [ARG]...\n", argv[0]);
-//         return 1;
-//     }
-
-//     int pipefd[2];
-
-//     if (pipe(pipefd) == -1) {
-//         perror("pipe");
-//         return 1;
-//     }
-
-//     pid_t pid = fork();
-
-//     if (pid < 0) {
-//         perror("fork failed");
-//         return 1;
-//     } else if (pid == 0) {
-//         close(pipefd[0]);
-
-//         char fd_path[64];
-//         snprintf(fd_path, sizeof(fd_path), "/proc/self/fd/%d", pipefd[1]);
-
-//         /*
-//             原命令：
-//                 ./sperf find /tmp
-
-//             变成：
-//                 strace -T -o /proc/self/fd/pipe写端 find /tmp
-//         */
-//         char **exec_argv = malloc(sizeof(char *) * (argc + 4));
-//         if (exec_argv == NULL) {
-//             perror("malloc");
-//             _exit(EXIT_FAILURE);
-//         }
-
-//         exec_argv[0] = "strace";
-//         exec_argv[1] = "-T";
-//         exec_argv[2] = "-o";
-//         exec_argv[3] = fd_path;
-
-//         for (int i = 1; i < argc; i++) {
-//             exec_argv[i + 3] = argv[i];
-//         }
-
-//         exec_argv[argc + 3] = NULL;
-
-//         /*
-//             建议用 execvp，保留原来的环境变量。
-//             这样 strace 查找 COMMAND 时可以使用正常 PATH。
-//         */
-//         execvp("strace", exec_argv);
-
-//         perror("execvp strace");
-//         _exit(EXIT_FAILURE);
-//     } else {
-//         close(pipefd[1]);
-
-//         regex_t reg;
-
-//         /*
-//             匹配这种 strace -T 输出：
-
-//             openat(...) = 3 <0.000023>
-//             read(...) = 1024 <0.000011>
-//             close(...) = 0 <0.000008>
-
-//             matches[1] = 系统调用名
-//             matches[2] = 耗时
-//         */
-//         const char *pattern =
-//             "^([a-z][a-z0-9_]*)\\(.*<([0-9]+\\.[0-9]+)>";
-
-//         int ret = regcomp(&reg, pattern, REG_EXTENDED);
-//         if (ret != 0) {
-//             char errbuf[256];
-//             regerror(ret, &reg, errbuf, sizeof(errbuf));
-//             fprintf(stderr, "regcomp failed: %s\n", errbuf);
-//             close(pipefd[0]);
-//             waitpid(pid, NULL, 0);
-//             return 1;
-//         }
-
-//         SyscallStat stats[MAX_SYSCALLS];
-//         int stat_count = 0;
-
-//         char buf[4096];
-//         char line[LINE_BUF_SIZE];
-//         size_t line_len = 0;
-
-//         long long last_output = now_ms();
-//         int dirty = 0;
-
-//         while (1) {
-//             ssize_t n = read(pipefd[0], buf, sizeof(buf));
-
-//             if (n < 0) {
-//                 if (errno == EINTR) {
-//                     continue;
-//                 }
-
-//                 perror("read");
-//                 break;
-//             }
-
-//             if (n == 0) {
-//                 break;
-//             }
-
-//             for (ssize_t i = 0; i < n; i++) {
-//                 if (buf[i] == '\n') {
-//                     line[line_len] = '\0';
-
-//                     process_line(&reg, line, stats, &stat_count, &dirty);
-
-//                     line_len = 0;
-//                 } else {
-//                     if (line_len + 1 < sizeof(line)) {
-//                         line[line_len++] = buf[i];
-//                     } else {
-//                         /*
-//                             极端情况下某一行太长，直接丢弃这一行。
-//                         */
-//                         line_len = 0;
-//                     }
-//                 }
-//             }
-
-//             /*
-//                 读取到 strace 输出后，如果距离上次输出超过 100ms，
-//                 就打印当前累计统计信息。
-//             */
-//             long long current = now_ms();
-
-//             if (dirty && current - last_output >= 100) {
-//                 print_top5(stats, stat_count);
-//                 last_output = current;
-//                 dirty = 0;
-//             }
-//         }
-
-//         /*
-//             如果最后还有半行，也处理一下。
-//         */
-//         if (line_len > 0) {
-//             line[line_len] = '\0';
-//             process_line(&reg, line, stats, &stat_count, &dirty);
-//         }
-
-//         /*
-//             程序结束前，把最后一次统计结果输出。
-//             否则短命令可能来不及超过 100ms，屏幕上什么都没有。
-//         */
-//         if (dirty) {
-//             print_top5(stats, stat_count);
-//         }
-
-//         regfree(&reg);
-//         close(pipefd[0]);
-
-//         int status;
-//         waitpid(pid, &status, 0);
-//     }
-
-//     return 0;
-// }
