@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
         char **exec_argv = malloc(sizeof(char *) * (argc + 4));
         exec_argv[0] = "strace";
         exec_argv[1] = "-T";
-        exec_argv[2] = "-o";
+        exec_argv[2] = " ";
         exec_argv[3] = fd_path;
         for (int i = 1; i < argc; i++) {
             exec_argv[i + 3] = argv[i];
