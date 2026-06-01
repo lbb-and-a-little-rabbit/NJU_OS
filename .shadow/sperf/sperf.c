@@ -74,9 +74,6 @@ int main(int argc, char *argv[]) {
             if (n <= 0) break;
             for (ssize_t i = 0; i < n; i++) {
                 if (buf[i] == '\n') {
-                    /*
-                        到这里，line 才是一整行 strace 输出
-                    */
                     line[line_len] = '\0';
 
                     regmatch_t match[3];
@@ -131,7 +128,7 @@ int main(int argc, char *argv[]) {
 
             long long curtime = now_ms();
             if (curtime - lastime >= 100) {
-                qsort(syslist, syscnt, sizeof(syslist), cmp);
+                qsort(syslist, syscnt, sizeof(SS), cmp);
                 double totaltime = 0;
                 for (int i = 0; i < syscnt; i++) {
                     totaltime += syslist[i].time;
@@ -145,7 +142,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        qsort(syslist, syscnt, sizeof(syslist), cmp);
+        qsort(syslist, syscnt, sizeof(SS), cmp);
         double totaltime = 0;
         for (int i = 0; i < syscnt; i++) {
             totaltime += syslist[i].time;
@@ -157,7 +154,6 @@ int main(int argc, char *argv[]) {
 
         int status;
         waitpid(pid, &status, 0);
-
 
     }
 
