@@ -23,7 +23,7 @@ long long now_ms(void) {
     return (long long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[], char *envp[]) {
     int pipefd[2];
     if (pipe(pipefd) == -1) {
         perror("pipe");
@@ -49,8 +49,7 @@ int main(int argc, char *argv[]) {
         }
 
         exec_argv[argc + 3] = NULL;
-        char *exec_envp[] = { "PATH=/bin", NULL, };
-        execve("/usr/bin/strace", exec_argv, exec_envp);
+        execve("/usr/bin/strace", exec_argv, envp);
         perror(argv[0]);
         exit(EXIT_FAILURE);
     }
